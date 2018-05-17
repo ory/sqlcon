@@ -1,5 +1,7 @@
 # sqlcon
 
+[![CircleCI](https://circleci.com/gh/ory/sqlcon.svg?style=shield)](https://circleci.com/gh/ory/sqlcon)
+
 ## Dockertest
 
 This library also helps with setting up Dockertest for SQL databases:
