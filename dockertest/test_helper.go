@@ -2,12 +2,14 @@ package dockertest
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/ory/dockertest"
 	"github.com/pkg/errors"
-	"log"
-	"os"
-	"time"
 )
 
 //atexit := atexit.NewOnExit()
@@ -33,6 +35,20 @@ func Register() *OnExit {
 		KillAllTestDatabases()
 	})
 	return onexit
+}
+
+func Parallel(fs []func()) {
+	wg := sync.WaitGroup{}
+
+	wg.Add(len(fs))
+	for _, f := range fs {
+		go func(f func()) {
+			f()
+			wg.Done()
+		}(f)
+	}
+
+	wg.Wait()
 }
 
 func ConnectToTestPostgreSQL() (*sqlx.DB, error) {

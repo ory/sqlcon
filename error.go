@@ -1,11 +1,12 @@
 package sqlcon
 
 import (
+	"net/http"
+
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
 	"github.com/ory/herodot"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 var (
