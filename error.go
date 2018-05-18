@@ -7,6 +7,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/ory/herodot"
 	"github.com/pkg/errors"
+	"database/sql"
 )
 
 var (
@@ -15,9 +16,18 @@ var (
 		StatusField: http.StatusText(http.StatusBadRequest),
 		ErrorField:  "Unable to insert row because a column value is not unique",
 	}
+	ErrNoRows = &herodot.DefaultError{
+		CodeField:   http.StatusNotFound,
+		StatusField: http.StatusText(http.StatusNotFound),
+		ErrorField:  "Unable to locate the resource",
+	}
 )
 
 func HandleError(err error) error {
+	if err == sql.ErrNoRows {
+		return errors.WithStack(ErrNoRows)
+	}
+
 	if err, ok := err.(*pq.Error); ok {
 		switch err.Code.Name() {
 		case "unique_violation":
