@@ -86,7 +86,11 @@ func (c *SQLConnection) GetDatabase() *sqlx.DB {
 	if err = retry(c.L, time.Second*15, time.Minute*2, func() error {
 		c.L.Infof("Connecting with %s", c.URL.Scheme+"://*:*@"+c.URL.Host+c.URL.Path+"?"+clean.RawQuery)
 
-		clean.Query().Set("parseTime", "true")
+		if clean.Scheme == "mysql" {
+			q := clean.Query()
+			q.Set("parseTime", "true")
+			clean.RawQuery = q.Encode()
+		}
 
 		u := clean.String()
 		if clean.Scheme == "mysql" {

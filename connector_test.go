@@ -123,6 +123,10 @@ func TestSQLConnection(t *testing.T) {
 			tc.s.L = logrus.New()
 			db := tc.s.GetDatabase()
 			require.Nil(t, db.Ping())
+
+			// Test for parseTime support in MySQL
+			tim := &time.Time{}
+			require.Nil(t, db.QueryRow("SELECT NOW()").Scan(&tim))
 		})
 	}
 }
