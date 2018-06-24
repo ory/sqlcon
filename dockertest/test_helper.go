@@ -24,8 +24,15 @@ var resources = []*dockertest.Resource{}
 var pool *dockertest.Pool
 
 func KillAllTestDatabases() {
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		panic(err)
+	}
+
 	for _, r := range resources {
-		pool.Purge(r)
+		if err := pool.Purge(r); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -64,7 +71,7 @@ func ConnectToTestPostgreSQL() (*sqlx.DB, error) {
 	var db *sqlx.DB
 	var err error
 
-	pool, err = dockertest.NewPool("")
+	pool, err := dockertest.NewPool("")
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not connect to docker")
 	}
@@ -103,8 +110,7 @@ func ConnectToTestMySQL() (*sqlx.DB, error) {
 	var db *sqlx.DB
 	var err error
 
-	pool, err = dockertest.NewPool("")
-	pool.MaxWait = time.Minute * 5
+	pool, err := dockertest.NewPool("")
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not connect to docker")
 	}
@@ -114,6 +120,7 @@ func ConnectToTestMySQL() (*sqlx.DB, error) {
 		return nil, errors.Wrap(err, "Could not start resource")
 	}
 
+	pool.MaxWait = time.Minute * 5
 	if err = pool.Retry(func() error {
 		var err error
 		db, err = sqlx.Open("mysql", fmt.Sprintf("root:secret@(localhost:%s)/mysql?parseTime=true", resource.GetPort("3306/tcp")))
