@@ -78,7 +78,7 @@ func TestCleanQueryURL(t *testing.T) {
 	assert.Equal(t, false, strings.Contains(b.String(), "max_conn_lifetime"))
 }
 
-func mustSQL(t *testing.T, db string) (*SQLConnection) {
+func mustSQL(t *testing.T, db string) *SQLConnection {
 	c, err := NewSQLConnection(db, logrus.New())
 	require.NoError(t, err)
 	return c
