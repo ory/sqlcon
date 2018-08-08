@@ -3,18 +3,18 @@ package sqlcon
 import (
 	"net/http"
 
+	"database/sql"
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
 	"github.com/ory/herodot"
 	"github.com/pkg/errors"
-	"database/sql"
 )
 
 var (
 	ErrUniqueViolation = &herodot.DefaultError{
-		CodeField:   http.StatusBadRequest,
-		StatusField: http.StatusText(http.StatusBadRequest),
-		ErrorField:  "Unable to insert row because a column value is not unique",
+		CodeField:   http.StatusConflict,
+		StatusField: http.StatusText(http.StatusConflict),
+		ErrorField:  "Unable to insert or update resource because a resource with that value exists already",
 	}
 	ErrNoRows = &herodot.DefaultError{
 		CodeField:   http.StatusNotFound,
