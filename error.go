@@ -1,9 +1,9 @@
 package sqlcon
 
 import (
+	"database/sql"
 	"net/http"
 
-	"database/sql"
 	"github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
 	"github.com/ory/herodot"
@@ -37,6 +37,10 @@ func HandleError(err error) error {
 	}
 
 	if err, ok := err.(*mysql.MySQLError); ok {
+		switch err.Number {
+		case 1062:
+			return errors.Wrap(ErrUniqueViolation, err.Error())
+		}
 		return errors.WithStack(err)
 	}
 
