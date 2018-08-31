@@ -81,6 +81,12 @@ func (c *SQLConnection) GetDatabase() *sqlx.DB {
 	}
 
 	var err error
+
+	userinfo := c.URL.User.Username()
+	if password, hasPassword := c.URL.User.Password(); hasPassword {
+		userinfo = userinfo + ":" + password
+	}
+	c.URL.User = nil
 	clean := cleanURLQuery(c.URL)
 
 	if err = retry(c.L, time.Second*15, time.Minute*2, func() error {
@@ -91,12 +97,13 @@ func (c *SQLConnection) GetDatabase() *sqlx.DB {
 			q.Set("parseTime", "true")
 			clean.RawQuery = q.Encode()
 		}
-
 		u := clean.String()
+		if strings.HasPrefix(u, clean.Scheme+"://") {
+			u = strings.Replace(u, clean.Scheme+"://", clean.Scheme+"://"+userinfo+"@", 1)
+		}
 		if clean.Scheme == "mysql" {
 			u = strings.Replace(u, "mysql://", "", -1)
 		}
-
 		if c.db, err = sqlx.Open(clean.Scheme, u); err != nil {
 			return errors.Errorf("Could not Connect to SQL: %s", err)
 		} else if err := c.db.Ping(); err != nil {
