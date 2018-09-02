@@ -81,22 +81,13 @@ func (c *SQLConnection) GetDatabase() *sqlx.DB {
 	}
 
 	var err error
+
 	clean := cleanURLQuery(c.URL)
 
 	if err = retry(c.L, time.Second*15, time.Minute*2, func() error {
 		c.L.Infof("Connecting with %s", c.URL.Scheme+"://*:*@"+c.URL.Host+c.URL.Path+"?"+clean.RawQuery)
 
-		if clean.Scheme == "mysql" {
-			q := clean.Query()
-			q.Set("parseTime", "true")
-			clean.RawQuery = q.Encode()
-		}
-
-		u := clean.String()
-		if clean.Scheme == "mysql" {
-			u = strings.Replace(u, "mysql://", "", -1)
-		}
-
+		u := connectionString(clean)
 		if c.db, err = sqlx.Open(clean.Scheme, u); err != nil {
 			return errors.Errorf("Could not Connect to SQL: %s", err)
 		} else if err := c.db.Ping(); err != nil {
@@ -153,4 +144,30 @@ func maxParallelism() int {
 		return maxProcs
 	}
 	return numCPU
+}
+
+func connectionString(clean *url.URL) string {
+	if clean.Scheme == "mysql" {
+		q := clean.Query()
+		q.Set("parseTime", "true")
+		clean.RawQuery = q.Encode()
+	}
+
+	username := clean.User.Username()
+	userinfo := username
+	password, hasPassword := clean.User.Password()
+	if hasPassword {
+		userinfo = userinfo + ":" + password
+	}
+	clean.User = nil
+	u := clean.String()
+	clean.User = url.UserPassword(username, password)
+
+	if strings.HasPrefix(u, clean.Scheme+"://") {
+		u = strings.Replace(u, clean.Scheme+"://", clean.Scheme+"://"+userinfo+"@", 1)
+	}
+	if clean.Scheme == "mysql" {
+		u = strings.Replace(u, "mysql://", "", -1)
+	}
+	return u
 }

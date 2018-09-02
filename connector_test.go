@@ -78,6 +78,13 @@ func TestCleanQueryURL(t *testing.T) {
 	assert.Equal(t, false, strings.Contains(b.String(), "max_conn_lifetime"))
 }
 
+func TestConnectionString(t *testing.T) {
+	a, _ := url.Parse("mysql://foo@bar:baz@qux/db")
+	b := connectionString(a)
+	assert.NotEqual(t, b, a.String())
+	assert.True(t, strings.HasPrefix(b, "foo@bar:baz@qux"))
+}
+
 func mustSQL(t *testing.T, db string) *SQLConnection {
 	c, err := NewSQLConnection(db, logrus.New())
 	require.NoError(t, err)
